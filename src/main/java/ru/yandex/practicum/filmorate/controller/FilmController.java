@@ -1,75 +1,58 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import java.time.LocalDate;
+import ru.yandex.practicum.filmorate.service.FilmService;
+
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
+@RequiredArgsConstructor
 public class FilmController {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int nextId = 0;
+    final FilmService filmService;
 
     @GetMapping
     public ResponseEntity<Collection<Film>> getAllFilms() {
         log.info("Запрос на получения списка фильмов");
-        return new ResponseEntity<>(films.values(), HttpStatus.OK);
+        return new ResponseEntity<>(filmService.getAllFilms(), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<Film> createFilm(@RequestBody Film film) {
         log.info("Запрос на создание фильма:{}", film);
-        validate(film);
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Создан фильм:{}", film);
-        return new ResponseEntity<>(film, HttpStatus.OK);
+        Film createdFilm = filmService.createFilm(film);
+        return new ResponseEntity<>(createdFilm, HttpStatus.OK);
     }
 
     @PutMapping
     public ResponseEntity<Film> updateFilm(@RequestBody Film film) {
         log.info("Запрос на обновление фильма:{}", film);
-        if (!films.containsKey(film.getId())) {
-            log.warn("Не найден фильм с id:{}", film.getId());
-            throw new NotFoundException("Не найден фильм с id=" + film.getId());
-        }
-        validate(film);
-        films.put(film.getId(), film);
-        log.info("Обновлен фильм:{}", film);
-        return new ResponseEntity<>(film, HttpStatus.OK);
+        Film updatedFilm = filmService.updateFilm(film);
+        return new ResponseEntity<>(updatedFilm, HttpStatus.OK);
     }
 
-    private int getNextId() {
-        return ++nextId;
+    @PutMapping("/{filmId}/like/{userId}")
+    public void addLike(@PathVariable Integer filmId, @PathVariable Integer userId) {
+        log.info("Запрос на отметку понравившегося фильма:{} от пользователя:{}", filmId, userId);
+        filmService.addLikeToFilm(filmId, userId);
     }
 
-    private void validate(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Ошибка валидации: name не определено");
-            throw new ValidationException("Название фильма не может быть пустым");
-        }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
-            log.warn("Ошибка валидации: description длиннее 200 символов");
-            throw new ValidationException("Описание фильма должно быть короче 200 символов");
-        }
-        if (film.getReleaseDate() == null
-                || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Ошибка валидации: releaseDate не определена или раньше 28.12.1895");
-            throw new ValidationException("Дата релиза фильма должна быть не раньше 28 декабря 1895 года;");
-        }
-        if (film.getDuration() <= 0) {
-            log.warn("Ошибка валидации: duration <= 0 ");
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public void removeLike(@PathVariable Integer filmId, @PathVariable Integer userId) {
+        log.info("Запрос на удаление отметки понравившегося фильма:{} от пользователя:{}", filmId, userId);
+        filmService.removeLikeFromFilm(filmId, userId);
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<Collection<Film>> getPopularFilms(@RequestParam int count) {
+        log.info("Запрос на получение {} наиболее популярных фильмов", count);
+        return new ResponseEntity<>(filmService.getMostPopularFilms(count), HttpStatus.OK);
     }
 }
