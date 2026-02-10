@@ -1,18 +1,26 @@
-package ru.yandex.practicum.filmorate.controller;
+package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FilmControllerValidationTest {
-    private final FilmController controller = new FilmController();
+class FilmServiceValidationTest {
+    private final FilmService filmService;
     private Film testFilm;
+
+    public FilmServiceValidationTest() {
+        IdGenerator idGen = new IdGenerator();
+        FilmStorage filmStorage = new InMemoryFilmStorage(idGen);
+        UserStorage userStorage = new InMemoryUserStorage(idGen);
+        this.filmService = new FilmService(filmStorage, userStorage);
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -25,62 +33,62 @@ class FilmControllerValidationTest {
 
     @Test
     void createFilmShouldNotThrowWhenCorrectFilm() {
-        assertDoesNotThrow(() -> controller.createFilm(testFilm));
+        assertDoesNotThrow(() -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenFilmNameIsBlank() {
         testFilm.setName("  ");
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenFilmNameIsNull() {
         testFilm.setName(null);
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenFilmDescriptionTooLong() {
         testFilm.setDescription("A".repeat(201));
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenReleaseDateIsNull() {
         testFilm.setReleaseDate(null);
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenReleaseDateIsTooEarly() {
         testFilm.setReleaseDate(LocalDate.of(1895, 1, 1));
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenDurationIsZero() {
         testFilm.setDuration(0);
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void createFilmShouldThrowValidationExceptionWhenDurationIsNegative() {
         testFilm.setDuration(-1);
-        assertThrows(ValidationException.class, () -> controller.createFilm(testFilm));
+        assertThrows(ValidationException.class, () -> filmService.createFilm(testFilm));
     }
 
     @Test
     void updateFilmShouldNotThrowWhenCorrectFilm() {
-        controller.createFilm(testFilm);
+        filmService.createFilm(testFilm);
         testFilm.setDescription("better description");
-        assertDoesNotThrow(() -> controller.updateFilm(testFilm));
+        assertDoesNotThrow(() -> filmService.updateFilm(testFilm));
     }
 
     @Test
     void updateFilmShouldThrowNotFoundExceptionWhenIdIsIncorrect() {
-        controller.createFilm(testFilm);
+        filmService.createFilm(testFilm);
         testFilm.setId(null);
-        assertThrows(NotFoundException.class, () -> controller.updateFilm(testFilm));
+        assertThrows(NotFoundException.class, () -> filmService.updateFilm(testFilm));
     }
 }

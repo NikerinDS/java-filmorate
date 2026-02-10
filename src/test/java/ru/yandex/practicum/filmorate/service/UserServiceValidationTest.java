@@ -1,18 +1,27 @@
-package ru.yandex.practicum.filmorate.controller;
+package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.IdGenerator;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserControllerValidationTest {
-    private final UserController controller = new UserController();
+class UserServiceValidationTest {
+    private final UserService userService;
     private User testUser;
+
+    public UserServiceValidationTest() {
+        IdGenerator idGen = new IdGenerator();
+        UserStorage userStorage = new InMemoryUserStorage(idGen);
+        this.userService = new UserService(userStorage);
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -25,56 +34,56 @@ class UserControllerValidationTest {
 
     @Test
     void createUserShouldNotThrowWhenCorrectFilm() {
-        assertDoesNotThrow(() -> controller.createUser(testUser));
+        assertDoesNotThrow(() -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenEmailIsNull() {
         testUser.setEmail(null);
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenEmailIsIncorrect() {
         testUser.setEmail("wrongEmail");
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenLoginIsNull() {
         testUser.setLogin(null);
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenLoginIsBlank() {
         testUser.setLogin(" ");
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenBirthDateIsNull() {
         testUser.setBirthday(null);
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void createUserShouldThrowValidationExceptionWhenBirthDateIsInFuture() {
         testUser.setBirthday(LocalDate.of(2500, 1, 1));
-        assertThrows(ValidationException.class, () -> controller.createUser(testUser));
+        assertThrows(ValidationException.class, () -> userService.createUser(testUser));
     }
 
     @Test
     void updateUserShouldNotThrowWhenCorrectFilm() {
-        controller.createUser(testUser);
+        userService.createUser(testUser);
         testUser.setName("new name");
-        assertDoesNotThrow(() -> controller.updateUser(testUser));
+        assertDoesNotThrow(() -> userService.updateUser(testUser));
     }
 
     @Test
     void updateUserShouldThrowNotFoundExceptionWhenIdIsIncorrect() {
-        controller.createUser(testUser);
+        userService.createUser(testUser);
         testUser.setId(null);
-        assertThrows(NotFoundException.class, () -> controller.updateUser(testUser));
+        assertThrows(NotFoundException.class, () -> userService.updateUser(testUser));
     }
 }
