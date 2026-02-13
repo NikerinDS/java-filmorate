@@ -2,33 +2,42 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.GenreDto;
+import ru.yandex.practicum.filmorate.dto.RatingDto;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.memory.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmServiceValidationTest {
     private final FilmService filmService;
-    private Film testFilm;
+    private FilmDto testFilm;
 
     public FilmServiceValidationTest() {
         IdGenerator idGen = new IdGenerator();
         FilmStorage filmStorage = new InMemoryFilmStorage(idGen);
         UserStorage userStorage = new InMemoryUserStorage(idGen);
-        this.filmService = new FilmService(filmStorage, userStorage);
+        RatingStorage ratingStorage = new InMemoryRatingStorage();
+        GenreStorage genreStorage = new InMemoryGenreStorage();
+        this.filmService = new FilmService(filmStorage, userStorage, ratingStorage, genreStorage);
     }
 
     @BeforeEach
     void beforeEach() {
-        testFilm = new Film(0,
+        testFilm = new FilmDto(0,
                 "Фильм",
                 "Описание",
                 LocalDate.of(2025, 1, 1),
-                100);
+                100,
+                new RatingDto(1, ""),
+                List.of(new GenreDto(1, ""), new GenreDto(2, "")),
+                0);
     }
 
     @Test
@@ -80,7 +89,7 @@ class FilmServiceValidationTest {
 
     @Test
     void updateFilmShouldNotThrowWhenCorrectFilm() {
-        filmService.createFilm(testFilm);
+        testFilm = filmService.createFilm(testFilm);
         testFilm.setDescription("better description");
         assertDoesNotThrow(() -> filmService.updateFilm(testFilm));
     }

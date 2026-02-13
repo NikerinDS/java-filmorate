@@ -1,2 +1,6 @@
-# java-filmorate
-Template repository for Filmorate project.
+# Filmorate
+## Описание
+Учебный проект для Яндекс Практикум.
+
+## Схема БД
+![схема базы данных](/docs/schema.svg)

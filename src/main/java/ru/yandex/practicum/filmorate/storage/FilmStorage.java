@@ -21,4 +21,6 @@ public interface FilmStorage {
     void removeLikeFromFilm(Integer filmId, Integer userId);
 
     Collection<Film> getFilmsByPopularity(int maxNumber);
+
+    Integer getLikesByFilmId(Integer filmId);
 }

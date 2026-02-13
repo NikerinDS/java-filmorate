@@ -1,8 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.memory;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
 
@@ -67,5 +68,10 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .map(e -> films.get(e.getKey()))
                 .limit(maxNumber)
                 .toList();
+    }
+
+    @Override
+    public Integer getLikesByFilmId(Integer filmId) {
+        return likes.containsKey(filmId) ? likes.get(filmId).size() : 0;
     }
 }
