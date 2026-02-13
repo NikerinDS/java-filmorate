@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
@@ -19,22 +19,28 @@ public class FilmController {
     final FilmService filmService;
 
     @GetMapping
-    public ResponseEntity<Collection<Film>> getAllFilms() {
+    public ResponseEntity<Collection<FilmDto>> getAllFilms() {
         log.info("Запрос на получения списка фильмов");
         return new ResponseEntity<>(filmService.getAllFilms(), HttpStatus.OK);
     }
 
+    @GetMapping("/{filmId}")
+    public ResponseEntity<FilmDto> getFilmById(@PathVariable Integer filmId) {
+        FilmDto film = filmService.getFilmById(filmId);
+        return new ResponseEntity<>(film, HttpStatus.OK);
+    }
+
     @PostMapping
-    public ResponseEntity<Film> createFilm(@RequestBody Film film) {
+    public ResponseEntity<FilmDto> createFilm(@RequestBody FilmDto film) {
         log.info("Запрос на создание фильма:{}", film);
-        Film createdFilm = filmService.createFilm(film);
+        FilmDto createdFilm = filmService.createFilm(film);
         return new ResponseEntity<>(createdFilm, HttpStatus.OK);
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@RequestBody Film film) {
+    public ResponseEntity<FilmDto> updateFilm(@RequestBody FilmDto film) {
         log.info("Запрос на обновление фильма:{}", film);
-        Film updatedFilm = filmService.updateFilm(film);
+        FilmDto updatedFilm = filmService.updateFilm(film);
         return new ResponseEntity<>(updatedFilm, HttpStatus.OK);
     }
 
@@ -51,7 +57,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<Collection<Film>> getPopularFilms(@RequestParam int count) {
+    public ResponseEntity<Collection<FilmDto>> getPopularFilms(@RequestParam int count) {
         log.info("Запрос на получение {} наиболее популярных фильмов", count);
         return new ResponseEntity<>(filmService.getMostPopularFilms(count), HttpStatus.OK);
     }

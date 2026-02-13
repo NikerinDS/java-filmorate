@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.InternalServerException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -30,11 +31,11 @@ public class UserService {
 
     public User updateUser(User user) {
         validate(user);
-        User updatedUser = userStorage.updateUser(user);
-        if (updatedUser == null) {
+        if (userStorage.getUserById(user.getId()).isEmpty()) {
             log.warn("Ошибка при обновлении пользователя: Не найден пользователь с id:{}", user.getId());
             throw new NotFoundException("Не найден пользователь с id=" + user.getId());
         }
+        User updatedUser = userStorage.updateUser(user);
         log.info("Обновлен пользователь:{}", updatedUser);
         return updatedUser;
     }
@@ -49,7 +50,6 @@ public class UserService {
             throw new NotFoundException("Не найден пользователь с id=" + userId2);
         }
         userStorage.addFriendToUser(userId1, userId2);
-        userStorage.addFriendToUser(userId2, userId1);
     }
 
     public void removeFriends(Integer userId1, Integer userId2) {
@@ -61,8 +61,11 @@ public class UserService {
             log.warn("Ошибка при удалении друзей: Не найден пользователь с id:{}", userId2);
             throw new NotFoundException("Не найден пользователь с id=" + userId2);
         }
-        userStorage.removeFriendFromUser(userId1, userId2);
-        userStorage.removeFriendFromUser(userId2, userId1);
+        try {
+            userStorage.removeFriendFromUser(userId1, userId2);
+        } catch (InternalServerException e) {
+            log.warn("Пользователи не друзья id1={} , id2={}", userId1, userId2);
+        }
     }
 
     public Collection<User> getMutualFriends(Integer userId1, Integer userId2) {
